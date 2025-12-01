@@ -1,0 +1,61 @@
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Python bytecode & caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.pyre/
+.coverage
+coverage.xml
+htmlcov/
+
+# Build & packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+.venv*/
+venv/
+env/
+
+# Tooling caches
+.cache/
+.idea/
+.vscode/
+*.code-workspace
+
+# Logs & runtime data
+*.log
+*.log.*
+*.sqlite3
+tests/test.db
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# SSL certificates / keys
+*.pem
+*.crt
+*.key
+!DigiCertGlobalRootG2.crt.pem
+
+# Frontend artifacts (if embedded)
+node_modules/
+.pnp*
+.yarn/
+.next/
+out/
+dist/
+
+

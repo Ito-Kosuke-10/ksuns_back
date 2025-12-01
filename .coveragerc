@@ -1,0 +1,7 @@
+[run]
+omit =
+    app/api/*
+    app/schemas/*
+    app/core/*
+    app/main.py
+    app/services/ai_client.py
