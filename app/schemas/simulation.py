@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class AnswerItem(BaseModel):
-    question_code: str = Field(..., min_length=1, description="e.g. q1, q2...")
+    question_code: str = Field(..., min_length=1, description="e.g. main_genre, seats")
     values: List[str] = Field(default_factory=list)
 
 
@@ -19,6 +19,9 @@ class SimulationResultResponse(BaseModel):
     funds_comment_category: str
     funds_comment_text: str
     store_story_text: str
+    concept_title: str
+    concept_detail: str
+    funds_summary: str
 
 
 class AttachUserRequest(BaseModel):

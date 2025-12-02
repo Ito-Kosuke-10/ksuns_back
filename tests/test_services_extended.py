@@ -131,19 +131,31 @@ def test_detail_summarize_concept_text_default_and_custom():
 
 
 def test_simulation_axis_score_unknown_and_compliance_floor():
-    answers = {"q1": ["undecided_main"], "q5": [], "q8": []}
+    answers = {
+        "main_genre": ["undecided_main"],
+        "seats": [],
+        "price_point": [],
+        "location": [],
+    }
     scores = sim.calculate_axis_scores(answers)
     assert scores["concept"] == 0.0
     assert scores["compliance"] == 1.0  # compliance gets minimum 1.0 when zero
 
 
 def test_simulation_generate_funds_comment_branches():
-    comment = sim.generate_funds_comment({"q8": ["41_plus"]})
+    comment = sim.generate_funds_comment({"seats": 50, "price_point": 3000})
     assert comment[0].name.lower() == "tight"
-    relaxed = sim.generate_funds_comment({"q5": ["over_8001"]})
+    relaxed = sim.generate_funds_comment({"seats": 10, "price_point": 9000})
     assert relaxed[0].name.lower() == "relaxed"
     fallback = sim.generate_funds_comment({})
     assert fallback[0].name.lower() == "tight"
+
+
+def test_simulation_store_profile_missing_required():
+    profile = sim._build_store_profile({})
+    missing = sim._find_missing_required(profile)
+    for key in ["main_genre", "sub_genre", "seats", "price_point", "business_hours", "location"]:
+        assert key in missing
 
 
 @pytest.mark.asyncio
@@ -152,10 +164,17 @@ async def test_simulation_generate_store_story_fallback(monkeypatch):
         return None
 
     monkeypatch.setattr(sim, "ai_generate_store_story", fake_story)
-    answers = {"q1": ["my concept"], "q2": ["calm"], "q6": ["cuisine"]}
-    story = await sim.generate_store_story(answers)
-    assert "my concept" in story
-    assert "cuisine" in story
+    profile = {
+        "main_genre": "izakaya",
+        "sub_genre": "izakaya_taishu",
+        "seats": 20,
+        "price_point": 3000,
+        "business_hours": "dinner",
+        "location": "near_station",
+    }
+    story = await sim.generate_store_story(profile)
+    assert "izakaya" in story
+    assert "near_station" in story
 
 
 @pytest.mark.asyncio
@@ -189,8 +208,12 @@ async def test_simulation_process_submission_for_guest(monkeypatch):
     monkeypatch.setattr(sim, "ai_generate_store_story", fake_story)
     payload = SubmitSimulationRequest(
         answers=[
-            AnswerItem(question_code="q1", values=["concept"]),
-            AnswerItem(question_code="q5", values=["over_8001"]),
+            AnswerItem(question_code="main_genre", values=["izakaya"]),
+            AnswerItem(question_code="sub_genre", values=["izakaya_taishu"]),
+            AnswerItem(question_code="seats", values=["24"]),
+            AnswerItem(question_code="price_point", values=["3000"]),
+            AnswerItem(question_code="business_hours", values=["dinner"]),
+            AnswerItem(question_code="location", values=["near_station"]),
         ],
         guest_session_token="guest123",
     )
@@ -217,8 +240,12 @@ async def test_simulation_process_submission_with_user(monkeypatch):
 
     payload = SubmitSimulationRequest(
         answers=[
-            AnswerItem(question_code="q1", values=["concept"]),
-            AnswerItem(question_code="q5", values=["budget"]),
+            AnswerItem(question_code="main_genre", values=["izakaya"]),
+            AnswerItem(question_code="sub_genre", values=["izakaya_taishu"]),
+            AnswerItem(question_code="seats", values=["12"]),
+            AnswerItem(question_code="price_point", values=["4500"]),
+            AnswerItem(question_code="business_hours", values=["dinner"]),
+            AnswerItem(question_code="location", values=["near_station"]),
         ],
         guest_session_token=None,
     )
