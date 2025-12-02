@@ -62,6 +62,7 @@ async def get_dashboard(
         growth_zone=axis_scores[0].growth_zone if axis_scores else 6.0,
         owner_note=note.content if note else "",
         latest_store_story=story.content if story else "",
+        user_email=current_user.email,
     )
 
 

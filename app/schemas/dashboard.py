@@ -40,6 +40,7 @@ class DashboardResponse(BaseModel):
     growth_zone: float = 6.0
     owner_note: str = ""
     latest_store_story: str = ""
+    user_email: str
 
 
 class OwnerNoteRequest(BaseModel):
