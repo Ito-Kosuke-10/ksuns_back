@@ -123,24 +123,6 @@ async def process_simulation_submission(
 ) -> SimulationResultResponse:
     answers_dict = {item.question_code: item.values for item in payload.answers}
 
-    session = SimpleSimulationSession(
-        user_id=user_id,
-        guest_session_token=payload.guest_session_token,
-        status=SimulationStatus.COMPLETED,
-        completed_at=datetime.utcnow(),
-    )
-    db.add(session)
-    await db.flush()  # to get session.id
-
-    for item in payload.answers:
-        db.add(
-            SimpleSimulationAnswer(
-                session_id=session.id,
-                question_code=item.question_code,
-                answer_values=item.values,
-            )
-        )
-
     store_profile = _build_store_profile(answers_dict)
     missing = _find_missing_required(store_profile)
     if missing:
@@ -155,6 +137,49 @@ async def process_simulation_submission(
     concept_title, concept_detail = await ai_generate_concept_summary(store_profile)
     funds_summary = await ai_generate_funds_summary(store_profile)
 
+    # 未ログイン: 計算結果のみ返却（DB保存しない）
+    if user_id is None:
+        return SimulationResultResponse(
+            session_id=0,
+            axis_scores=axis_scores,
+            funds_comment_category=funds_category.value,
+            funds_comment_text=funds_comment,
+            store_story_text=story_text,
+            concept_title=concept_title,
+            concept_detail=concept_detail,
+            funds_summary=funds_summary,
+        )
+
+    # ログイン済み: 保存（既存tokenがあれば上書き再利用）
+    session = None
+    if payload.guest_session_token:
+        session = await _get_session_by_guest_token(db, payload.guest_session_token)
+
+    if session:
+        session.user_id = user_id
+        session.status = SimulationStatus.COMPLETED
+        session.completed_at = datetime.utcnow()
+        await db.execute(delete(SimpleSimulationAnswer).where(SimpleSimulationAnswer.session_id == session.id))
+        await db.execute(delete(SimpleSimulationResult).where(SimpleSimulationResult.session_id == session.id))
+    else:
+        session = SimpleSimulationSession(
+            user_id=user_id,
+            guest_session_token=payload.guest_session_token,
+            status=SimulationStatus.COMPLETED,
+            completed_at=datetime.utcnow(),
+        )
+        db.add(session)
+        await db.flush()  # to get session.id
+
+    for item in payload.answers:
+        db.add(
+            SimpleSimulationAnswer(
+                session_id=session.id,
+                question_code=item.question_code,
+                answer_values=item.values,
+            )
+        )
+
     db.add(
         SimpleSimulationResult(
             session_id=session.id,
@@ -165,30 +190,28 @@ async def process_simulation_submission(
         )
     )
 
-    # If authenticated, persist per-axis scores and store story
-    if user_id:
-        axis_map = await _get_axis_id_map(db)
-        for axis_code, score in axis_scores.items():
-            axis_id = axis_map.get(axis_code)
-            if axis_id is None:
-                continue
-            db.add(
-                AxisScore(
-                    user_id=user_id,
-                    axis_id=axis_id,
-                    score=score,
-                    level1_completion_ratio=0,
-                    level2_completion_ratio=0,
-                    calculated_at=datetime.utcnow(),
-                )
-            )
+    axis_map = await _get_axis_id_map(db)
+    for axis_code, score in axis_scores.items():
+        axis_id = axis_map.get(axis_code)
+        if axis_id is None:
+            continue
         db.add(
-            StoreStory(
+            AxisScore(
                 user_id=user_id,
-                source=StoreStorySource.SIMPLE_SIMULATION,
-                content=story_text,
+                axis_id=axis_id,
+                score=score,
+                level1_completion_ratio=0,
+                level2_completion_ratio=0,
+                calculated_at=datetime.utcnow(),
             )
         )
+    db.add(
+        StoreStory(
+            user_id=user_id,
+            source=StoreStorySource.SIMPLE_SIMULATION,
+            content=story_text,
+        )
+    )
 
     await db.commit()
 
@@ -309,3 +332,9 @@ def _find_missing_required(store_profile: dict[str, object]) -> list[str]:
             missing.append(key)
     return missing
 
+
+async def _get_session_by_guest_token(db: AsyncSession, token: str) -> Optional[SimpleSimulationSession]:
+    result = await db.execute(
+        select(SimpleSimulationSession).where(SimpleSimulationSession.guest_session_token == token)
+    )
+    return result.scalar_one_or_none()

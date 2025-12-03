@@ -10,7 +10,9 @@ class AnswerItem(BaseModel):
 
 class SubmitSimulationRequest(BaseModel):
     answers: List[AnswerItem] = Field(..., min_length=1)
-    guest_session_token: Optional[str] = None
+    guest_session_token: Optional[str] = Field(
+        default=None, description="Optional token to identify a guest session (for reuse)"
+    )
 
 
 class SimulationResultResponse(BaseModel):

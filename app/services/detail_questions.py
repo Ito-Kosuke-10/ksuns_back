@@ -248,6 +248,12 @@ async def save_detail_answers(session: AsyncSession, user_id: int, answers: dict
     )
     existing_map = {row.question_code: row for row in existing_result.scalars()}
 
+    # 全問回答必須: 1問でも None があれば 400 相当のエラー
+    total = len(DETAIL_QUESTION_DEFINITIONS)
+    answered_count = sum(1 for q in DETAIL_QUESTION_DEFINITIONS if answers.get(q["code"]) is not None)
+    if answered_count < total:
+        raise ValueError("All detail questions (24) must be answered before saving.")
+
     for question_code, value in answers.items():
         existing = existing_map.get(question_code)
         if value is None:

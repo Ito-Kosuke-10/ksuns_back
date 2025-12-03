@@ -1,4 +1,5 @@
 import pytest
+from fastapi import HTTPException
 
 from app.models.qa import QAContextType
 from app.schemas.qa import QAResponse
@@ -159,6 +160,17 @@ def test_simulation_store_profile_missing_required():
 
 
 @pytest.mark.asyncio
+async def test_simulation_process_requires_guest_token():
+    session = FakeSession()
+    payload = SubmitSimulationRequest(
+        answers=[AnswerItem(question_code="main_genre", values=["concept"])],
+        guest_session_token="",
+    )
+    with pytest.raises(HTTPException):
+        await sim.process_simulation_submission(session, payload, user_id=None)
+
+
+@pytest.mark.asyncio
 async def test_simulation_generate_store_story_fallback(monkeypatch):
     async def fake_story(payload):
         return None
@@ -247,7 +259,7 @@ async def test_simulation_process_submission_with_user(monkeypatch):
             AnswerItem(question_code="business_hours", values=["dinner"]),
             AnswerItem(question_code="location", values=["near_station"]),
         ],
-        guest_session_token=None,
+        guest_session_token="guest-token-attach",
     )
     session = FakeSession()
 
@@ -257,6 +269,31 @@ async def test_simulation_process_submission_with_user(monkeypatch):
     # AxisScore objects for user should be added
     assert any(obj.__class__.__name__ == "AxisScore" for obj in session.added)
     assert session.committed is True
+
+
+@pytest.mark.asyncio
+async def test_simulation_process_submission_guest_no_save(monkeypatch):
+    async def fake_story(payload):
+        return "generated story"
+
+    monkeypatch.setattr(sim, "ai_generate_store_story", fake_story)
+    payload = SubmitSimulationRequest(
+        answers=[
+          AnswerItem(question_code="main_genre", values=["izakaya"]),
+          AnswerItem(question_code="sub_genre", values=["izakaya_taishu"]),
+          AnswerItem(question_code="seats", values=["20"]),
+          AnswerItem(question_code="price_point", values=["3000"]),
+          AnswerItem(question_code="business_hours", values=["dinner"]),
+          AnswerItem(question_code="location", values=["near_station"]),
+        ],
+    )
+    session = FakeSession()
+
+    result = await sim.process_simulation_submission(session, payload, user_id=None)
+
+    assert result.session_id == 0
+    assert session.added == []
+    assert session.committed is False
 
 
 @pytest.mark.asyncio
