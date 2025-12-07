@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, simulations_simple, dashboard, axes, qa, detail_questions, deep_questions
+from app.api import auth, simulations_simple, dashboard, axes, qa, detail_questions, deep_questions, plans
 from app.core.config import get_settings
 from app.core.logging_config import setup_logging
 
@@ -32,3 +32,4 @@ app.include_router(axes.router)
 app.include_router(qa.router)
 app.include_router(detail_questions.router)
 app.include_router(deep_questions.router)
+app.include_router(plans.router) # からちゃん追加部分

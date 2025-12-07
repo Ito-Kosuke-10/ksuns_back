@@ -13,6 +13,11 @@ class SubmitSimulationRequest(BaseModel):
     guest_session_token: Optional[str] = Field(
         default=None, description="Optional token to identify a guest session (for reuse)"
     )
+    # ★ からちゃん追加: どのプランのシミュレーションか（ログイン時のみ意味を持つ想定）
+    plan_id: Optional[int] = Field(
+        default=None,
+        description="Attach this simulation result to a specific opening plan (logged-in users only)",
+    )
 
 
 class SimulationResultResponse(BaseModel):
