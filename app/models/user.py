@@ -81,3 +81,9 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    # plans リレーションを追加　からちゃん
+    plans = relationship(
+        "PlanningPlan",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )

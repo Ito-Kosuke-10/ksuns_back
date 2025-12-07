@@ -167,6 +167,8 @@ async def process_simulation_submission(
             guest_session_token=payload.guest_session_token,
             status=SimulationStatus.COMPLETED,
             completed_at=datetime.utcnow(),
+            # ★ からちゃん追加: ログイン済みで plan_id が来ていればセット
+            plan_id=payload.plan_id if user_id is not None else None,
         )
         db.add(session)
         await db.flush()  # to get session.id

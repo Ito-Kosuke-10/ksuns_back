@@ -13,7 +13,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-
+from app.models.plan import PlanningPlan # からちゃん追加部分 複数プラン対応のため、プランモデルを追加に対応
 
 class SimulationStatus(str, Enum):
     IN_PROGRESS = "in_progress"
@@ -33,6 +33,12 @@ class SimpleSimulationSession(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     user_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    # ★ からちゃん追加: どのプランの簡易シミュレーションかを示す
+    plan_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("planning_plans.id", ondelete="SET NULL"),  # テーブル名は実装に合わせて
+        nullable=True,
     )
     guest_session_token: Mapped[str | None] = mapped_column(
         String(255), nullable=True, unique=True
@@ -63,6 +69,10 @@ class SimpleSimulationSession(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    # ★ からちゃん追加: プランとのリレーション
+    plan = relationship(
+        "PlanningPlan", 
+        back_populates="simulation_sessions")
 
 
 class SimpleSimulationAnswer(Base):
