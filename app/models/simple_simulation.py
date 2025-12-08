@@ -70,9 +70,7 @@ class SimpleSimulationSession(Base):
         cascade="all, delete-orphan",
     )
     # ★ からちゃん追加: プランとのリレーション
-    plan = relationship(
-        "PlanningPlan", 
-        back_populates="simulation_sessions")
+    planning_plan = relationship("PlanningPlan", back_populates="simulation_sessions")
 
 
 class SimpleSimulationAnswer(Base):
