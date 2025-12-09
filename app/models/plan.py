@@ -1,5 +1,5 @@
 # 複数プラン対応のため、プランモデルを追加　からちゃん
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import BigInteger, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -32,16 +32,19 @@ class PlanningPlan(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=datetime.utcnow,
+        default=lambda: datetime.now(timezone.utc),
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     # ------------------------------------------------------------------
     # リレーション
     # ------------------------------------------------------------------
     user = relationship("User", back_populates="plans")
+    
+    # 他のモデルから参照されるための設定
+    simulation_sessions = relationship("SimpleSimulationSession", back_populates="planning_plan", cascade="all, delete-orphan")
