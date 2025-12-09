@@ -5,6 +5,9 @@ from app.api import auth, simulations_simple, dashboard, axes, qa, detail_questi
 from app.core.config import get_settings
 from app.core.logging_config import setup_logging
 
+# ...他の import 文の並びに追加
+from app.api import free_chat  # ★これを追加
+
 setup_logging()
 settings = get_settings()
 
@@ -33,3 +36,4 @@ app.include_router(qa.router)
 app.include_router(detail_questions.router)
 app.include_router(deep_questions.router)
 app.include_router(plans.router) # からちゃん追加部分
+app.include_router(free_chat.router, prefix="/api", tags=["chat"]) # ★はまさん追加部分
