@@ -97,3 +97,18 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    funding_plan_answers = relationship(
+        "FundingPlanAnswer",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    operation_answers = relationship(
+        "OperationAnswer",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    location_answers = relationship(
+        "LocationAnswer",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
