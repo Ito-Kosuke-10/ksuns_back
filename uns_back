@@ -1,0 +1,25 @@
+[1mdiff --git a/app/api/auth.py b/app/api/auth.py[m
+[1mindex 570d74c..577c298 100644[m
+[1m--- a/app/api/auth.py[m
+[1m+++ b/app/api/auth.py[m
+[36m@@ -106,7 +106,8 @@[m [masync def google_callback([m
+         )[m
+     except ValueError:[m
+         # Signup not allowed in this flow[m
+[31m-        redirect_url = f"{settings.frontend_url}/login?error=signup_not_allowed"[m
+[32m+[m[32m        frontend_base = settings.frontend_url.rstrip("/")[m
+[32m+[m[32m        redirect_url = f"{frontend_base}/login?error=signup_not_allowed"[m
+         return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)[m
+ [m
+     access_expires = timedelta(minutes=settings.access_token_ttl_min)[m
+[36m@@ -124,7 +125,9 @@[m [masync def google_callback([m
+     )[m
+ [m
+     set_refresh_cookie(response, refresh_token, settings)[m
+[31m-    redirect_url = f"{settings.frontend_url}/dashboard?access_token={access_token}"[m
+[32m+[m[32m    # FRONTEND_URLの末尾スラッシュを削除してから結合[m
+[32m+[m[32m    frontend_base = settings.frontend_url.rstrip("/")[m
+[32m+[m[32m    redirect_url = f"{frontend_base}/dashboard?access_token={access_token}"[m
+     return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)[m
+ [m
+ [m

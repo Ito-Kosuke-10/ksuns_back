@@ -92,3 +92,8 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    revenue_forecast_answers = relationship(
+        "RevenueForecastAnswer",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )

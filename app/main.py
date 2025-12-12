@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, simulations_simple, dashboard, axes, qa, detail_questions, deep_questions, plans, concept
+from app.api import auth, simulations_simple, dashboard, axes, qa, detail_questions, deep_questions, plans, concept, revenue_forecast
 from app.core.config import get_settings
 from app.core.logging_config import setup_logging
 
@@ -53,3 +53,4 @@ app.include_router(deep_questions.router)
 app.include_router(plans.router) # からちゃん追加部分
 app.include_router(free_chat.router, prefix="/api", tags=["chat"]) # ★はまさん追加部分
 app.include_router(concept.router) # コンセプト軸の質問カードAPI
+app.include_router(revenue_forecast.router) # 収支予測軸の質問カードAPI

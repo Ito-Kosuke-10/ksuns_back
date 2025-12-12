@@ -2,6 +2,7 @@ from app.models.base import Base
 from app.models.axis import AxisAnswer, AxisScore, AxisStep, PlanningAxis
 from app.models.business_plan import BusinessPlanDraft
 from app.models.concept_answer import ConceptAnswer
+from app.models.revenue_forecast_answer import RevenueForecastAnswer
 from app.models.detail_question import DetailQuestionAnswer
 from app.models.deep_question import DeepAnswer, DeepQuestion
 from app.models.free_question import FreeQuestion
@@ -38,4 +39,5 @@ __all__ = [
     "QAConversation",
     "QAMessage",
     "ConceptAnswer",
+    "RevenueForecastAnswer",
 ]
