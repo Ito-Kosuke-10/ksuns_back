@@ -112,3 +112,18 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    interior_exterior_answers = relationship(
+        "InteriorExteriorAnswer",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    marketing_answers = relationship(
+        "MarketingAnswer",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    menu_answers = relationship(
+        "MenuAnswer",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
