@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, simulations_simple, dashboard, axes, qa, detail_questions, deep_questions, plans, concept, revenue_forecast, funding_plan, operation, location
+from app.api import auth, simulations_simple, dashboard, axes, qa, detail_questions, deep_questions, plans, concept, revenue_forecast, funding_plan, operation, location, interior_exterior, marketing, menu
 from app.core.config import get_settings
 from app.core.logging_config import setup_logging
 
@@ -57,3 +57,6 @@ app.include_router(revenue_forecast.router) # 収支予測軸の質問カードA
 app.include_router(funding_plan.router) # 資金計画軸の質問カードAPI
 app.include_router(operation.router) # オペレーション軸の質問カードAPI
 app.include_router(location.router) # 立地軸の質問カードAPI
+app.include_router(interior_exterior.router) # 内装外装軸の質問カードAPI
+app.include_router(marketing.router) # 販促軸の質問カードAPI
+app.include_router(menu.router) # メニュー軸の質問カードAPI

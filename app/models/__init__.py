@@ -6,6 +6,9 @@ from app.models.revenue_forecast_answer import RevenueForecastAnswer
 from app.models.funding_plan_answer import FundingPlanAnswer
 from app.models.operation_answer import OperationAnswer
 from app.models.location_answer import LocationAnswer
+from app.models.interior_exterior_answer import InteriorExteriorAnswer
+from app.models.marketing_answer import MarketingAnswer
+from app.models.menu_answer import MenuAnswer
 from app.models.detail_question import DetailQuestionAnswer
 from app.models.deep_question import DeepAnswer, DeepQuestion
 from app.models.free_question import FreeQuestion
@@ -46,4 +49,7 @@ __all__ = [
     "FundingPlanAnswer",
     "OperationAnswer",
     "LocationAnswer",
+    "InteriorExteriorAnswer",
+    "MarketingAnswer",
+    "MenuAnswer",
 ]
