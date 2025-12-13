@@ -16,7 +16,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-from app.models.plan import PlanningPlan # からちゃん追加部分 複数プラン対応のため、プランモデルを追加に対応
+# from app.models.plan import PlanningPlan # からちゃん追加部分 複数プラン対応のため、プランモデルを追加に対応（一時的にコメントアウト）
 
 class SimulationStatus(str, Enum):
     IN_PROGRESS = "in_progress"
