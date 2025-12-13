@@ -1,6 +1,7 @@
 from functools import lru_cache
-from typing import List, Optional
+from typing import List, Optional, Union
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -44,11 +45,20 @@ class Settings(BaseSettings):
     azure_openai_deployment: str = ""
     azure_openai_api_version: str = "2024-12-01-preview"
 
-    # CORS
-    cors_origins: List[str] = []
+    # CORS (accepts comma-separated string or list)
+    cors_origins: Union[str, List[str]] = ""
 
     # Azure deployment
     scm_do_build_during_deployment: Optional[str] = None
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            if not v:
+                return []
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     @property
     def database_url(self) -> str:
