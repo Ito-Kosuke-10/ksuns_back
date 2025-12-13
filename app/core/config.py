@@ -62,10 +62,14 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
-        return (
+        base_url = (
             f"mysql+asyncmy://{self.db_user}:{self.db_password}"
             f"@{self.db_host}:{self.db_port}/{self.db_name}"
         )
+        # Add SSL parameter for Azure MySQL
+        if self.ssl_ca_path:
+            return f"{base_url}?ssl=true"
+        return base_url
 
     class Config:
         env_file = ".env"
