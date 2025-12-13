@@ -148,14 +148,14 @@ def _format_store_profile_for_prompt(store_profile: Dict[str, Any]) -> str:
 
 async def _chat_completion(
     messages: List[ChatCompletionMessageParam],
-    max_completion_tokens: int = 2000,
+    max_tokens: int = 2000,
 ) -> str:
     """Azure OpenAI の chat.completions を呼び出し、最初のメッセージ内容を返す。"""
 
     def _call() -> str:
         response = client.chat.completions.create(
             messages=messages,
-            max_completion_tokens=max_completion_tokens,
+            max_tokens=max_tokens,
             model=MODEL_NAME,
         )
         
@@ -193,7 +193,7 @@ async def generate_store_story(store_profile: Dict[str, Any]) -> str:
             "content": f"{_format_store_profile_for_prompt(store_profile)}",
         },
     ]
-    story = await _chat_completion(messages, max_completion_tokens=3000)
+    story = await _chat_completion(messages, max_tokens=3000)
     if story:
         return story
 
@@ -226,7 +226,7 @@ async def generate_concept_summary(store_profile: Dict[str, Any]) -> Tuple[str, 
             "content": f"{_format_store_profile_for_prompt(store_profile)}",
         },
     ]
-    text = await _chat_completion(messages, max_completion_tokens=2000)
+    text = await _chat_completion(messages, max_tokens=2000)
     title = ""
     detail = ""
     if text:
@@ -274,7 +274,7 @@ async def generate_funds_summary(store_profile: Dict[str, Any]) -> str:
             "content": f"{_format_store_profile_for_prompt(store_profile)}",
         },
     ]
-    summary = await _chat_completion(messages, max_completion_tokens=2000)
+    summary = await _chat_completion(messages, max_tokens=2000)
     if summary:
         return summary
 
@@ -300,7 +300,7 @@ async def generate_summary(summary_type: str, context: Dict[str, Any]) -> str:
         {"role": "system", "content": prompt},
         {"role": "user", "content": f"計画情報: {context}"},
     ]
-    return await _chat_completion(messages, max_completion_tokens=5000)
+    return await _chat_completion(messages, max_tokens=5000)
 
 
 async def answer_question(context: Dict[str, Any], question: str) -> str:
@@ -315,4 +315,4 @@ async def answer_question(context: Dict[str, Any], question: str) -> str:
         {"role": "system", "content": prompt},
         {"role": "user", "content": f"前提: {context}\n質問: {question}"},
     ]
-    return await _chat_completion(messages, max_completion_tokens=3000)
+    return await _chat_completion(messages, max_tokens=3000)

@@ -112,7 +112,7 @@ async def post_concept_chat(
     
     # OpenAI APIを呼び出し
     try:
-        assistant_response = await _chat_completion(messages, max_completion_tokens=2000)
+        assistant_response = await _chat_completion(messages, max_tokens=2000)
     except Exception as e:
         print(f"🔥 OpenAI API呼び出しエラー: {e}")
         raise HTTPException(
@@ -213,7 +213,7 @@ async def post_concept_summary(
     ]
     
     try:
-        summary = await _chat_completion(messages, max_completion_tokens=2000)
+        summary = await _chat_completion(messages, max_tokens=2000)
     except Exception as e:
         print(f"🔥 サマリー生成API呼び出しエラー: {e}")
         raise HTTPException(
