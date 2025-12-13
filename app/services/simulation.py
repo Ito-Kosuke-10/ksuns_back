@@ -13,6 +13,7 @@ from app.models.simple_simulation import (
     SimulationStatus,
 )
 from app.models.axis import PlanningAxis, AxisScore
+from sqlalchemy import delete
 from app.schemas.simulation import SimulationResultResponse, SubmitSimulationRequest
 
 
@@ -172,14 +173,40 @@ async def process_simulation_submission(
             detail="Guest session token is required for saving results",
         )
 
-    # Create session
-    session_obj = SimpleSimulationSession(
-        user_id=user_id,
-        guest_session_token=payload.guest_session_token if not user_id else None,
-        status=SimulationStatus.COMPLETED,
-    )
-    db.add(session_obj)
-    await db.flush()
+    # Check if session with same guest_session_token already exists
+    session_obj = None
+    if payload.guest_session_token:
+        result = await db.execute(
+            select(SimpleSimulationSession).where(
+                SimpleSimulationSession.guest_session_token == payload.guest_session_token
+            )
+        )
+        session_obj = result.scalar_one_or_none()
+
+    if session_obj:
+        # Update existing session - delete old answers and result first
+        await db.execute(
+            delete(SimpleSimulationAnswer).where(
+                SimpleSimulationAnswer.session_id == session_obj.id
+            )
+        )
+        await db.execute(
+            delete(SimpleSimulationResult).where(
+                SimpleSimulationResult.session_id == session_obj.id
+            )
+        )
+        # Update session status
+        session_obj.status = SimulationStatus.COMPLETED
+        session_obj.user_id = user_id
+    else:
+        # Create new session
+        session_obj = SimpleSimulationSession(
+            user_id=user_id,
+            guest_session_token=payload.guest_session_token if not user_id else None,
+            status=SimulationStatus.COMPLETED,
+        )
+        db.add(session_obj)
+        await db.flush()
 
     # Save answers
     for item in payload.answers:
