@@ -14,7 +14,7 @@ from app.models.simple_simulation import (
 )
 from app.models.axis import PlanningAxis, AxisScore
 from sqlalchemy import delete
-from app.schemas.simulation import SimulationResultResponse, SubmitSimulationRequest
+from app.schemas.simulation import FinancialForecast, SimulationResultResponse, SubmitSimulationRequest
 
 
 # Required fields for store profile
@@ -164,6 +164,11 @@ async def process_simulation_submission(
             concept_detail=profile.get("sub_genre", ""),
             funds_summary=funds_text,
             monthly_sales=monthly_sales,
+            financial_forecast=FinancialForecast(
+                monthly_sales=monthly_sales,
+                funds_comment_category=funds_category.value,
+                funds_comment_text=funds_text,
+            ),
         )
 
     # Guest without token - require token
@@ -251,6 +256,11 @@ async def process_simulation_submission(
         concept_detail=profile.get("sub_genre", ""),
         funds_summary=funds_text,
         monthly_sales=monthly_sales,
+        financial_forecast=FinancialForecast(
+            monthly_sales=monthly_sales,
+            funds_comment_category=funds_category.value,
+            funds_comment_text=funds_text,
+        ),
     )
 
 
@@ -305,4 +315,9 @@ async def attach_session_to_user(
         concept_detail="",
         funds_summary=sim_result.funds_comment_text or "",
         monthly_sales=None,
+        financial_forecast=FinancialForecast(
+            monthly_sales=None,
+            funds_comment_category=sim_result.funds_comment_category.value,
+            funds_comment_text=sim_result.funds_comment_text or "",
+        ),
     )

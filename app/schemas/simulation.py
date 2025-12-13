@@ -20,6 +20,13 @@ class SubmitSimulationRequest(BaseModel):
     )
 
 
+class FinancialForecast(BaseModel):
+    """Financial forecast data for simulation result."""
+    monthly_sales: Optional[int] = None
+    funds_comment_category: str
+    funds_comment_text: str
+
+
 class SimulationResultResponse(BaseModel):
     session_id: int
     axis_scores: dict[str, float]
@@ -30,6 +37,7 @@ class SimulationResultResponse(BaseModel):
     concept_detail: str
     funds_summary: str
     monthly_sales: Optional[int] = None
+    financial_forecast: Optional[FinancialForecast] = None
 
 
 class AttachUserRequest(BaseModel):
