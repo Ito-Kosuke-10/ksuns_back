@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import Optional
+
 from datetime import datetime
 from enum import Enum
 
@@ -31,22 +34,23 @@ class SimpleSimulationSession(Base):
     __tablename__ = "simple_simulation_sessions"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    user_id: Mapped[int | None] = mapped_column(
+    user_id: Mapped[Optional[int]] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     # ★ からちゃん追加: どのプランの簡易シミュレーションかを示す
-    plan_id: Mapped[int | None] = mapped_column(
-        BigInteger,
-        ForeignKey("planning_plans.id", ondelete="SET NULL"),  # テーブル名は実装に合わせて
-        nullable=True,
-    )
-    guest_session_token: Mapped[str | None] = mapped_column(
+    # 一時的にコメントアウト（DBにカラムが存在しないため、マイグレーション必要）
+    # plan_id: Mapped[Optional[int]] = mapped_column(
+    #     BigInteger,
+    #     ForeignKey("planning_plans.id", ondelete="SET NULL"),  # テーブル名は実装に合わせて
+    #     nullable=True,
+    # )
+    guest_session_token: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True, unique=True
     )
     started_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.utcnow
     )
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     status: Mapped[SimulationStatus] = mapped_column(
         SqlEnum(
             SimulationStatus,
@@ -70,7 +74,8 @@ class SimpleSimulationSession(Base):
         cascade="all, delete-orphan",
     )
     # ★ からちゃん追加: プランとのリレーション
-    planning_plan = relationship("PlanningPlan", back_populates="simulation_sessions")
+    # 一時的にコメントアウト（plan_id外部キーが存在しないため）
+    # planning_plan = relationship("PlanningPlan", back_populates="simulation_sessions")
 
 
 class SimpleSimulationAnswer(Base):
@@ -106,8 +111,8 @@ class SimpleSimulationResult(Base):
         ),
         nullable=False,
     )
-    funds_comment_text: Mapped[str | None] = mapped_column(String(2048), nullable=True)
-    store_story_text: Mapped[str | None] = mapped_column(String(4096), nullable=True)
+    funds_comment_text: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
+    store_story_text: Mapped[Optional[str]] = mapped_column(String(4096), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.utcnow
     )
