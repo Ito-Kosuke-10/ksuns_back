@@ -60,7 +60,7 @@ def calculate_axis_scores(answers: dict) -> dict[str, float]:
     return scores
 
 
-def generate_funds_comment(data: dict) -> tuple[FundsCommentCategory, str]:
+def generate_funds_comment(data: dict) -> tuple[FundsCommentCategory, str, int]:
     """Generate funds comment based on store profile data."""
     seats = data.get("seats", 0)
     price_point = data.get("price_point", 0)
@@ -71,7 +71,7 @@ def generate_funds_comment(data: dict) -> tuple[FundsCommentCategory, str]:
         price_point = int(price_point) if price_point.isdigit() else 0
 
     # Calculate monthly revenue estimate
-    monthly_revenue = seats * price_point * 30 * 0.7  # 70% occupancy
+    monthly_revenue = int(seats * price_point * 30 * 0.7)  # 70% occupancy
 
     if monthly_revenue > 5000000:  # > 500万
         category = FundsCommentCategory.RELAXED
@@ -83,7 +83,7 @@ def generate_funds_comment(data: dict) -> tuple[FundsCommentCategory, str]:
         category = FundsCommentCategory.TIGHT
         text = "資金計画に注意が必要です。慎重な運営を心がけてください。"
 
-    return (category, text)
+    return (category, text, monthly_revenue)
 
 
 def _build_store_profile(answers: dict) -> dict:
@@ -146,7 +146,7 @@ async def process_simulation_submission(
     axis_scores = calculate_axis_scores(answers_dict)
 
     # Generate funds comment
-    funds_category, funds_text = generate_funds_comment(profile)
+    funds_category, funds_text, monthly_sales = generate_funds_comment(profile)
 
     # Generate store story
     store_story = await generate_store_story(profile)
@@ -162,6 +162,7 @@ async def process_simulation_submission(
             concept_title=profile.get("main_genre", ""),
             concept_detail=profile.get("sub_genre", ""),
             funds_summary=funds_text,
+            monthly_sales=monthly_sales,
         )
 
     # Guest without token - require token
@@ -222,6 +223,7 @@ async def process_simulation_submission(
         concept_title=profile.get("main_genre", ""),
         concept_detail=profile.get("sub_genre", ""),
         funds_summary=funds_text,
+        monthly_sales=monthly_sales,
     )
 
 
@@ -275,4 +277,5 @@ async def attach_session_to_user(
         concept_title="",
         concept_detail="",
         funds_summary=sim_result.funds_comment_text or "",
+        monthly_sales=None,
     )

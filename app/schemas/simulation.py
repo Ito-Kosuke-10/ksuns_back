@@ -29,6 +29,7 @@ class SimulationResultResponse(BaseModel):
     concept_title: str
     concept_detail: str
     funds_summary: str
+    monthly_sales: Optional[int] = None
 
 
 class AttachUserRequest(BaseModel):
