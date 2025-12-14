@@ -510,6 +510,12 @@ async def attach_session_to_user(
         return None
 
     # Save axis scores for user
+    # ▼追加：Dashboard(CONCEPT) 用の StoreStory を作成（ゲスト→ログイン移行の取りこぼし防止）
+    # sim_result.store_story_text は process_simulation_submission 側で保存されている想定
+    if sim_result.store_story_text and sim_result.store_story_text.strip():
+        db.add(StoreStory(user_id=user_id, content=sim_result.store_story_text.strip()))
+    # ▲追加ここまで
+
     axis_map = await _get_axis_id_map(db)
     for axis_code, score in sim_result.axis_scores.items():
         if axis_code in axis_map:
