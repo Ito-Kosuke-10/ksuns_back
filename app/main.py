@@ -1,3 +1,8 @@
+# ★★★ ここに2行追加してください ★★★
+from dotenv import load_dotenv
+load_dotenv()
+# ★★★★★★★★★★★★★★★★★★★★★★★
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
