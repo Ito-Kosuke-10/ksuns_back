@@ -131,3 +131,20 @@ async def generate_summary(
     ]
 
     return await _chat_completion(messages, max_tokens=1024)
+
+# --- compatibility wrapper: legacy name expected by other modules ---
+async def send_chat_completion(
+    messages: list[dict],
+    max_tokens: int = 1024,
+    temperature: float = 0.7,
+) -> str:
+    """
+    simulation.py 等が import している send_chat_completion の互換関数。
+    既存の _chat_completion を呼び出すだけ。
+    """
+    result = await _chat_completion(
+        messages=messages,
+        max_tokens=max_tokens,
+        temperature=temperature,
+    )
+    return result or ""

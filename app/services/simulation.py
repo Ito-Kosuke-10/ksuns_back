@@ -1,6 +1,6 @@
 """Simulation service for simple simulation functionality."""
 from typing import Optional
-
+from app.services.ai_client import send_chat_completion
 from fastapi import HTTPException, status
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -334,6 +334,43 @@ def _build_store_profile(answers: dict) -> dict:
             profile[key] = value[0] if isinstance(value, list) else value
     return profile
 
+async def _generate_store_story_ai(profile: dict, concept_name: str) -> str:
+    system = (
+        "あなたは飲食店の新規開業を支援するプロのコピーライターです。"
+        "ユーザーが考えた条件から、読み手がワクワクする『コンセプト紹介文』を日本語で作ります。"
+        "箇条書きではなく、自然な文章で。"
+    )
+
+    user = f"""
+以下の条件を元に、ダッシュボードのCONCEPTカードに載せる文章を作ってください。
+
+# 要件
+- 400〜700字程度
+- 1段落目：情景（どんな店で誰がどんな気持ちになるか）
+- 2段落目：店の強み（料理/体験/価格帯/回転/客層など）
+- 3段落目：一言の締め（来店動機になる言葉）
+- 「コンセプト名:」のようなラベル文字は禁止
+- 【】や箇条書き禁止
+
+# 入力
+コンセプト名候補: {concept_name}
+メインジャンル: {profile.get("main_genre","")}
+サブジャンル: {profile.get("sub_genre","")}
+想定客層: {profile.get("target","")}
+立地: {profile.get("location","")}
+営業時間: {profile.get("business_hours","")}
+価格帯: {profile.get("price_range","")}
+特徴: {profile.get("features","")}
+""".strip()
+
+    text = await send_chat_completion(
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ]
+    )
+    return (text or "").strip()
+
 
 async def _get_axis_id_map(db: AsyncSession) -> dict[str, int]:
     """Get mapping of axis codes to axis IDs."""
@@ -368,15 +405,26 @@ async def process_simulation_submission(
     # Generate opening notes
     opening_notes = generate_opening_notes(profile)
     # Dashboard(CONCEPT) 用のテキスト（StoreStory.content に保存する元データ）
-    store_story_text = "\n".join(
-        [
+    # 旧: store_story_text = "\n".join(...)
+    store_story_text = ""
+    try:
+        store_story_text = await _generate_store_story_ai(profile, concept_name)
+    except Exception:
+        store_story_text = ""
+
+    # フォールバック（AIが空ならテンプレ）
+    if not store_story_text:
+        store_story_text = "\n".join([
             f"コンセプト名: {concept_name}",
             f"補足: {concept_sub_comment}",
             "",
             "開業メモ:",
             opening_notes,
-        ]
-    ).strip()
+        ])
+
+    # 4096に収める
+    store_story_text = store_story_text[:4000]
+
 
 
     # Build response
@@ -464,8 +512,10 @@ async def process_simulation_submission(
 
     # If user is logged in, save axis scores
     if user_id:
-        # Dashboard(CONCEPT) は StoreStory から取得されるため、ログインユーザーは必ず保存する
-        db.add(StoreStory(user_id=user_id, source="simple_simulation", content=store_story_text))
+        story = (store_story_text or "").strip()
+        if story:
+            db.add(StoreStory(user_id=user_id, source="simple_simulation", content=story))
+        
         axis_map = await _get_axis_id_map(db)
         for axis_code, score in axis_scores.items():
             if axis_code in axis_map:
@@ -511,10 +561,11 @@ async def attach_session_to_user(
 
     # Save axis scores for user
     # ▼追加：Dashboard(CONCEPT) 用の StoreStory を作成（ゲスト→ログイン移行の取りこぼし防止）
-    # sim_result.store_story_text は process_simulation_submission 側で保存されている想定
-    if sim_result.store_story_text and sim_result.store_story_text.strip():
-        db.add(StoreStory(user_id=user_id, content=sim_result.store_story_text.strip()))
+    store_story = (sim_result.store_story_text or "").strip()
+    if store_story:
+        db.add(StoreStory(user_id=user_id, source="simple_simulation", content=store_story))
     # ▲追加ここまで
+
 
     axis_map = await _get_axis_id_map(db)
     for axis_code, score in sim_result.axis_scores.items():
