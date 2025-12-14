@@ -6,7 +6,7 @@ load_dotenv()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, simulations_simple, dashboard, axes, qa, detail_questions, deep_questions, plans, concept, revenue_forecast, funding_plan, operation, location, interior_exterior, marketing, menu
+from app.api import auth, simulations_simple, dashboard, axes, qa, detail_questions, deep_questions, plans, concept, revenue_forecast, funding_plan, operation, location, interior_exterior, marketing, menu, report
 from app.core.config import get_settings
 from app.core.logging_config import setup_logging
 
@@ -65,3 +65,4 @@ app.include_router(location.router) # 立地軸の質問カードAPI
 app.include_router(interior_exterior.router) # 内装外装軸の質問カードAPI
 app.include_router(marketing.router) # 販促軸の質問カードAPI
 app.include_router(menu.router) # メニュー軸の質問カードAPI
+app.include_router(report.router) # 開業プラン出力API
