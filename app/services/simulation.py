@@ -14,7 +14,7 @@ from app.models.simple_simulation import (
 )
 from app.models.axis import PlanningAxis, AxisScore
 from app.schemas.simulation import FinancialForecast, SimulationResultResponse, SubmitSimulationRequest
-
+from app.models.notes import StoreStory
 
 # Required fields for store profile
 REQUIRED_FIELDS = ["main_genre", "sub_genre", "seats", "price_point", "business_hours", "location"]
@@ -367,6 +367,17 @@ async def process_simulation_submission(
 
     # Generate opening notes
     opening_notes = generate_opening_notes(profile)
+    # Dashboard(CONCEPT) 用のテキスト（StoreStory.content に保存する元データ）
+    store_story_text = "\n".join(
+        [
+            f"コンセプト名: {concept_name}",
+            f"補足: {concept_sub_comment}",
+            "",
+            "開業メモ:",
+            opening_notes,
+        ]
+    ).strip()
+
 
     # Build response
     def build_response(session_id: int) -> SimulationResultResponse:
@@ -380,7 +391,7 @@ async def process_simulation_submission(
             # 後方互換性フィールド
             funds_comment_category=funds_category.value,
             funds_comment_text=funds_text,
-            store_story_text="",
+            store_story_text=store_story_text,
             concept_title=MAIN_GENRE_LABELS.get(profile.get("main_genre", ""), ""),
             concept_detail=SUB_GENRE_LABELS.get(profile.get("sub_genre", ""), ""),
             funds_summary=funds_text,
@@ -447,12 +458,14 @@ async def process_simulation_submission(
         axis_scores=axis_scores,
         funds_comment_category=funds_category,
         funds_comment_text=funds_text,
-        store_story_text="",
+        store_story_text=store_story_text,
     )
     db.add(result_obj)
 
     # If user is logged in, save axis scores
     if user_id:
+        # Dashboard(CONCEPT) は StoreStory から取得されるため、ログインユーザーは必ず保存する
+        db.add(StoreStory(user_id=user_id, source="simple_simulation", content=store_story_text))
         axis_map = await _get_axis_id_map(db)
         for axis_code, score in axis_scores.items():
             if axis_code in axis_map:
