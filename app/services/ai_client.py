@@ -1,5 +1,5 @@
 """AI Client service for Azure OpenAI integration."""
-from typing import Optional
+from typing import AsyncGenerator, Optional
 
 from openai import AsyncAzureOpenAI
 
@@ -36,6 +36,31 @@ async def _chat_completion(
         return response.choices[0].message.content
     except Exception:
         return None
+
+
+async def _chat_completion_stream(
+    messages: list[dict],
+    max_tokens: int = 1024,
+    temperature: float = 0.7,
+) -> AsyncGenerator[str, None]:
+    """Send a streaming chat completion request to Azure OpenAI."""
+    if not settings.azure_openai_api_key or not settings.azure_openai_endpoint:
+        yield ""
+        return
+
+    try:
+        response = await client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            stream=True,
+        )
+        async for chunk in response:
+            if chunk.choices and chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
+    except Exception as e:
+        yield f"[エラー: {str(e)}]"
 
 
 async def answer_question(context: dict, question: str) -> Optional[str]:
