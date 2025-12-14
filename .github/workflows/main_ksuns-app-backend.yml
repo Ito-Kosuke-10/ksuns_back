@@ -70,6 +70,5 @@ jobs:
           app-name: 'ksuns-app-backend'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1CBE79E982E84437909047294787DD65 }}
-          type: zip
           clean: true
           restart: true
