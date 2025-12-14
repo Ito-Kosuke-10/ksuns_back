@@ -60,6 +60,9 @@ jobs:
         with:
           name: python-app
 
+      - name: Wait for any ongoing deployment to finish
+        run: sleep 30
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
@@ -67,5 +70,6 @@ jobs:
           app-name: 'ksuns-app-backend'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1CBE79E982E84437909047294787DD65 }}
+          type: zip
           clean: true
           restart: true
