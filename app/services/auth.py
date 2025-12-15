@@ -1,9 +1,12 @@
+import logging
 from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
+
+logger = logging.getLogger(__name__)
 
 
 async def get_or_create_user(
@@ -35,8 +38,13 @@ async def get_or_create_user(
     if not allow_create:
         raise ValueError("User creation is not allowed in this flow")
 
-    new_user = User(google_sub=google_sub, email=email, display_name=display_name or email)
-    session.add(new_user)
-    await session.commit()
-    await session.refresh(new_user)
-    return new_user
+    try:
+        new_user = User(google_sub=google_sub, email=email, display_name=display_name or email)
+        session.add(new_user)
+        await session.commit()
+        await session.refresh(new_user)
+        return new_user
+    except Exception as e:
+        logger.error(f"Failed to create user in database: {e}", exc_info=True)
+        await session.rollback()
+        raise

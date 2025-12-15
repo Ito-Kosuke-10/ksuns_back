@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from urllib.parse import urlencode
@@ -23,6 +24,8 @@ from app.schemas.auth import (
     UserInfo,
 )
 from app.services.auth import get_or_create_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 settings = get_settings()
@@ -104,9 +107,15 @@ async def google_callback(
             display_name=name,
             allow_create=allow_create_flag,
         )
-    except ValueError:
+    except ValueError as e:
         # Signup not allowed in this flow
+        logger.warning(f"User creation failed: {e}")
         redirect_url = f"{settings.frontend_url}/login?error=signup_not_allowed"
+        return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
+    except Exception as e:
+        # Database connection error or other unexpected errors
+        logger.error(f"Database error during user creation: {e}", exc_info=True)
+        redirect_url = f"{settings.frontend_url}/login?error=database_error"
         return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
 
     access_expires = timedelta(minutes=settings.access_token_ttl_min)
