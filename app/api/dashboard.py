@@ -118,16 +118,28 @@ async def get_dashboard(
         }
         
         axis_order = []
+        # まず、planning_axesテーブルから軸の順序を取得
         for axis in axis_list:
             normalized_code = code_normalization.get(axis.code, axis.code)
             if normalized_code in axis_mapping or normalized_code in base_scores_dict or axis.code in base_scores_dict:
                 axis_order.append(axis.code)
         
         # planning_axesにない軸は、base_scores_dictまたはaxis_mappingの順序で追加
+        # ただし、既にaxis_orderに含まれている軸（正規化後のコードで）は追加しない
+        existing_normalized = {code_normalization.get(a, a) for a in axis_order}
         for axis_code in list(base_scores_dict.keys()) + list(axis_mapping.keys()):
             normalized = code_normalization.get(axis_code, axis_code)
-            if normalized not in [code_normalization.get(a, a) for a in axis_order]:
-                axis_order.append(axis_code)
+            if normalized not in existing_normalized:
+                # 正規化後のコードが既に存在する場合は、元のコードを追加
+                # ただし、interior_exteriorとequipmentの場合は、interior_exteriorを優先
+                if normalized == "interior_exterior":
+                    # interior_exteriorが既に存在するか確認
+                    if "interior_exterior" not in axis_order:
+                        axis_order.append("interior_exterior")
+                        existing_normalized.add("interior_exterior")
+                elif axis_code not in axis_order:
+                    axis_order.append(axis_code)
+                    existing_normalized.add(normalized)
 
         # 各軸のスコアを計算（Deep Questionsの完了カード数で上書き）
         axis_scores = []
