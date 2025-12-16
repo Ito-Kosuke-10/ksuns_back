@@ -12,6 +12,7 @@ from app.core.logging_config import setup_logging
 
 # ...他の import 文の並びに追加
 from app.api import free_chat  # ★これを追加
+from app.api import mindmap  # マインドマップAPI
 
 setup_logging()
 settings = get_settings()
@@ -66,3 +67,4 @@ app.include_router(interior_exterior.router) # 内装外装軸の質問カード
 app.include_router(marketing.router) # 販促軸の質問カードAPI
 app.include_router(menu.router) # メニュー軸の質問カードAPI
 app.include_router(report.router) # 開業プラン出力API
+app.include_router(mindmap.router) # マインドマップAPI
