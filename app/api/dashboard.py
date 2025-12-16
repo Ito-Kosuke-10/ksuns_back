@@ -411,7 +411,7 @@ async def get_dashboard(
                     axis_code=target.code,
                     axis_name=target.name,
                     reason=(
-                        f"{target.name}の質問がまだ{target.missing}件未回答です。"
+                        f"{target.missing}件が未回答です。"
                         if target.missing > 0
                         else f"{target.name}のスコアが{target.score:.1f}点と低めです。"
                     ),
