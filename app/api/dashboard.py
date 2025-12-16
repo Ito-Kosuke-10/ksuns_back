@@ -97,6 +97,12 @@ async def get_dashboard(
             "marketing": (MarketingAnswer, MARKETING_QUESTIONS),
             "menu": (MenuAnswer, MENU_QUESTIONS),
         }
+        # 処理する軸の順序を決定（planning_axesテーブルの順序に従う）
+        # 軸コードの正規化マッピング（detail_questionsの"equipment"を"interior_exterior"にマッピング）
+        code_normalization = {
+            "equipment": "interior_exterior",
+            "interior_exterior": "interior_exterior",
+        }
         
         # 軸のメタデータを取得
         try:
@@ -105,17 +111,14 @@ async def get_dashboard(
             )
             axis_list = list(axis_meta_result.scalars())
             axis_meta_dict = {axis.code: axis for axis in axis_list}
+            # ====== 正規化キーでも引けるようにする ======
+            for code, axis in list(axis_meta_dict.items()):
+                axis_meta_dict[code_normalization.get(code, code)] = axis
         except SQLAlchemyError as e:
             logger.warning(f"planning_axesテーブルの取得に失敗: {e}")
             axis_list = []
             axis_meta_dict = {}
         
-        # 処理する軸の順序を決定（planning_axesテーブルの順序に従う）
-        # 軸コードの正規化マッピング（detail_questionsの"equipment"を"interior_exterior"にマッピング）
-        code_normalization = {
-            "equipment": "interior_exterior",
-            "interior_exterior": "interior_exterior",
-        }
         
         axis_order = []
         # まず、planning_axesテーブルから軸の順序を取得
@@ -140,6 +143,16 @@ async def get_dashboard(
                 elif axis_code not in axis_order:
                     axis_order.append(axis_code)
                     existing_normalized.add(normalized)
+                    # axis_orderを正規化して重複排除（equipmentを消す）
+        normalized_axis_order = []
+        seen = set()
+        for code in axis_order:
+            normalized = code_normalization.get(code, code)  # equipment -> interior_exterior に統一
+            if normalized not in seen:
+                normalized_axis_order.append(normalized)
+                seen.add(normalized)
+
+        axis_order = normalized_axis_order
 
         # 各軸のスコアを計算（Deep Questionsの完了カード数で上書き）
         axis_scores = []
@@ -345,9 +358,10 @@ async def get_dashboard(
                 total_questions_for_axis = base_score.total_questions
             else:
                 total_questions_for_axis = 0
-            
+            # ====== 返却する軸コードを統一（フロントのキーずれ対策） ======
+            response_axis_code = code_normalization.get(axis_code, axis_code)
             final_axis_summary = AxisSummary(
-                code=axis_code,
+                code=response_axis_code,
                 name=axis_name,
                 score=score,
                 ok_line=ok_line,
